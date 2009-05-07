@@ -47,14 +47,20 @@ function! s:quickkeywordprg()
 endfunction
 
 
-function! s:quickrun()
+function! s:quickrun() range
   if !exists('b:quickrun_command')
     echoerr 'quickrun is not available for filetype:' string(&l:filetype)
     return
   endif
   let quickrun_command = s:get_quickrun_command()
 
-  let existent_file_p = filereadable(expand('%'))
+  if a:firstline == 1 && a:lastline == line('$')
+      let existent_file_p = filereadable(expand('%'))
+      let range = "%"
+  else
+      let existent_file_p = 0
+      let range = a:firstline . "," . a:lastline
+  endif
   if existent_file_p
     silent update
     let file = expand('%:p')
@@ -62,7 +68,7 @@ function! s:quickrun()
     let file = tempname() . expand('%:e')
     let original_bufname = bufname('')
     let original_modified = &l:modified
-      silent keepalt write `=file`
+      silent keepalt exec range . "write" file
       if original_bufname == ''
         " Reset the side effect of ":write {file}" - it sets {file} as the
         " name of the current buffer if it is unnamed buffer.
@@ -147,8 +153,12 @@ endif
 
 
 
-nnoremap <silent> <Plug>(quickrun)  :<C-u>call <SID>quickrun()<Return>
+nnoremap <Plug>(quickrun)  :%call <SID>quickrun()<Return>
 silent! nmap <unique> <Leader>r  <Plug>(quickrun)
+
+vnoremap <Plug>(quickrun)  :call <SID>quickrun()<Return>
+silent! vmap <unique> <Leader>r  <Plug>(quickrun)
+
 for i in range(10)
   execute "nnoremap <silent> <Plug>(quicklaunch-" . i . ") :<C-u>call <SID>quicklaunch(" . i . ")<Return>"
   execute "silent! nmap <unique> <Leader>" . i . "  <Plug>(quicklaunch-" . i . ")"
