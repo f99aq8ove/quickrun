@@ -57,7 +57,7 @@ function! s:quickrun()
   let existent_file_p = filereadable(expand('%'))
   if existent_file_p
     silent update
-    let file = expand('%')
+    let file = expand('%:p')
   else
     let file = tempname() . expand('%:e')
     let original_bufname = bufname('')
